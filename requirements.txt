@@ -1,1 +1,4 @@
 Flask==0.12.3
+adafruit-circuitpython-mcp3xxx
+adafruit-circuitpython-debouncer
+python-mraa

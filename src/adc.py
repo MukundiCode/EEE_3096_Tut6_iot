@@ -1,15 +1,14 @@
-from flask import Flask
-#import busio
-#import digitalio 
-#import board 
+import busio
+import digitalio 
+import board 
 import adafruit_mcp3xxx.mcp3008 as MCP 
-#from adafruit_mcp3xxx.analog_in import AnalogIn
+from adafruit_mcp3xxx.analog_in import AnalogIn
 from adafruit_debouncer import Debouncer
 
 import threading
 import time
 import datetime
-import mraa
+import RPi.GPIO as GPIO
 import math
 
 #pins used
@@ -22,11 +21,9 @@ sampling = [10, 5, 1] #different time intervals
 #i = 0 #sampling index for different time intervals
 
 #setting up button
-BTN =mraa.Gpio(23)
-BTN.dir(mraa.DIR_OUT)
-#GPIO.setmode(GPIO.BCM)
-#GPIO.setup(BTN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
+BTN = 23
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(BTN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def change_sample(x):
 	if x == 2:
@@ -39,23 +36,26 @@ def change_sample(x):
 def read_adc():
 	global spi, cs, mcp, chan2, chan1, chan3, button ,switch
 	# create the spi bus
-	spi = mraa.Spi(0) #busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
+	spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
 	
-	button = mraa.Gpio(23)
-	button.dir(mraa.DIR_OUT)
-	#button.pull = digitalio.Pull.UP
+	button = digitalio.DigitalInOut(board.D23)
+	button.direction = digitalio.Direction.INPUT
+	button.pull = digitalio.Pull.UP
 	switch = Debouncer(button,interval=0.1)
 	# create the cs (chip select)
-	cs = mraa.Gpio(5)
-    
-	cs.dir(mraa.DIR_OUT)
+	cs = digitalio.DigitalInOut(board.D5)
+
+	# create the mcp object
 	mcp = MCP.MCP3008(spi, cs)
 
 	# create an analog input channel on pin 0
-	chan2 = mraa.Aio(mcp, MCP.P2) #AnalogIn(mcp, MCP.P2)
+	chan2 = AnalogIn(mcp, MCP.P2)
 
 	# create analog input channel on pin 1
-	chan1 = mraa.Aio(mcp, MCP.P1) #AnalogIn(mcp, MCP.P1)
+	chan1 = AnalogIn(mcp, MCP.P1)
+
+
+
 
 def sensor_temp(adc_value):
 	"""Temperature calculation"""
@@ -77,16 +77,10 @@ def print_time_thread():
     thread.daemon = True  # Daemon threads exit when the program does
     thread.start()
     read_adc()
-    return ("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value))
+    print("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value))
 
 
-
-
-
-app = Flask(__name__)
-
-@app.route('/')
-def hello_world():
+if __name__ == "__main__":
     global i 
     i = 0
     try:
@@ -103,9 +97,4 @@ def hello_world():
     except Exception as e:
         print(e)
     finally:
-        mraa.Gpio.cleanup()
-        
-    return 'Hello Mukundi!'
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80) 
+        GPIO.cleanup()
