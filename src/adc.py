@@ -90,7 +90,7 @@ if __name__ == "__main__":
         # Tell our program to run indefinitely
         while True:
             switch.update()
-            #GPIO.add_event_detect(BTN, GPIO.FALLING, callback=my_callback, bouncetime=300)
+            GPIO.add_event_detect(BTN, GPIO.FALLING, callback=my_callback, bouncetime=300)
             if  switch.rose:
                 i = change_sample(i)
             pass
