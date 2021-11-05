@@ -1,4 +1,5 @@
 from flask import Flask
+import socket
 import busio
 import digitalio 
 import board 
@@ -64,9 +65,24 @@ def sensor_temp(adc_value):
 	temp = (adc_value-0.4)/0.01
 	return temp
 
+#setting up tcp connection
+TCP_IP = '172.20.10.12'
+TCP_PORT = 5003
+BUFFER_SIZE = 1024
+M = "Hello, World!"
+MESSAGE = str.encode(M)
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((TCP_IP, TCP_PORT))
+s.send(MESSAGE)
+data = s.recv(BUFFER_SIZE)
+#s.close()
+
+
 #setup()
 print("{:<15} {:<15} {:<15} {:>2} {:<15}".format('Runtime','Temp Reading','Temp',"",'Light Reading'))
 start = time.time()
+
 
 
 def print_time_thread():
@@ -77,7 +93,10 @@ def print_time_thread():
     thread.daemon = True  # Daemon threads exit when the program does
     thread.start()
     read_adc()
-    print("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value))
+
+    message = "{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value)
+    MESSAGE = str.encode(message)
+    s.send(message)
 
 
 
