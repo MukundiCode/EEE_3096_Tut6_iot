@@ -75,7 +75,7 @@ MESSAGE = str.encode(M)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((TCP_IP, TCP_PORT))
 s.send(MESSAGE)
-data = s.recv(BUFFER_SIZE)
+#data = s.recv(BUFFER_SIZE)
 #s.close()
 
 
@@ -92,11 +92,13 @@ def print_time_thread():
     thread = threading.Timer(sampling[i], print_time_thread)
     thread.daemon = True  # Daemon threads exit when the program does
     thread.start()
-    read_adc()
+    #read_adc()
 
-    message = "{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value)
+    #message = "{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value)
+    message = ("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
+    print("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
     MESSAGE = str.encode(message)
-    s.send(message)
+    s.send(MESSAGE)
 
 
 
