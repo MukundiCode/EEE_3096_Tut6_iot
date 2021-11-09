@@ -66,6 +66,7 @@ def sensor_temp(adc_value):
 	return temp
 
 #setting up tcp connection
+readData = True
 TCP_IP = '172.20.10.12'
 TCP_PORT = 5003
 BUFFER_SIZE = 1024
@@ -84,24 +85,63 @@ print("{:<15} {:<15} {:<15} {:>2} {:<15}".format('Runtime','Temp Reading','Temp'
 start = time.time()
 
 
-
 def print_time_thread():
+    global readData
     """
     This function prints the time to the screen every five seconds
     """
+    #print(readData)
     thread = threading.Timer(sampling[i], print_time_thread)
     thread.daemon = True  # Daemon threads exit when the program does
     thread.start()
     #read_adc()
 
-    #message = "{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value)
-    message = ("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
-    print("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
-    MESSAGE = str.encode(message)
-    s.send(MESSAGE)
+    if readData:
+        #message = "{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value)
+        message = ("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
+        print("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
+        MESSAGE = str.encode(message)
+        s.send(MESSAGE)
+
+
+def recieve():
+    global readData,s
+    while(True):
+        fromServer = s.recv(1024).decode()
+        if(fromServer == "sendon"):
+            print(fromServer)
+            readData = True
+            sendAck = "sendonACK"
+            s.send(str.encode(sendAck))
+
+        elif(fromServer == "sendoff"):
+            print(fromServer)
+            readData = False
+            sendAck = "sendoffACK"
+            s.send(str.encode(sendAck))
+        print("Sending data:",readData)
 
 
 
+def sendData():
+    global i 
+    i = 0
+    try:
+        GPIO.setmode(GPIO.BCM)
+        start = time.time()
+        print_time_thread() # call it once to start the thread
+        #setup()
+        # Tell our program to run indefinitely
+        while True:
+            switch.update()
+            #GPIO.add_event_detect(BTN, GPIO.FALLING, callback=my_callback, bouncetime=300)
+            if  switch.rose:
+                i = change_sample(i)
+            pass
+    except Exception as e:
+        print(e)
+    finally:
+        GPIO.cleanup()
 
 
 app = Flask(__name__)
@@ -130,4 +170,7 @@ def hello_world():
     return 'Hello Mukundi!'
 
 if __name__ == '__main__':
+    thread =  threading.Thread(target=recieve,args=())
+    thread.start()
+    sendData()
     app.run(host='0.0.0.0', port=80) 
