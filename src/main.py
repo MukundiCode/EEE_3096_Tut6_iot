@@ -94,12 +94,13 @@ def print_time_thread():
     thread = threading.Timer(sampling[i], print_time_thread)
     thread.daemon = True  # Daemon threads exit when the program does
     thread.start()
-    #read_adc()
+    read_adc()
 
     if readData:
-        #message = "{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value)
-        message = ("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
-        print("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
+        message = "{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", chan1.value,sensor_temp(chan1.voltage), "C", chan2.value)
+        #message = ("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
+        #print("{:<15} {:<15} {:<15.1f} {:>2} {:<15}".format(str(math.floor((time.time()-start)))+"s", 0,0, "C", 0))
+        print(message)
         MESSAGE = str.encode(message)
         s.send(MESSAGE)
 
@@ -119,6 +120,10 @@ def recieve():
             readData = False
             sendAck = "sendoffACK"
             s.send(str.encode(sendAck))
+        elif(fromServer == "status"):
+            print(fromServer)
+            response = "Sending data currently set to: "+str(readData)
+            s.send(str.encode(response))
         print("Sending data:",readData)
 
 
