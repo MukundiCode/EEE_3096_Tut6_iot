@@ -84,7 +84,7 @@ s.send(MESSAGE)
 print("{:<15} {:<15} {:<15} {:>2} {:<15}".format('Runtime','Temp Reading','Temp',"",'Light Reading'))
 start = time.time()
 
-
+#thread that sends the data
 def print_time_thread():
     global readData
     """
@@ -105,6 +105,7 @@ def print_time_thread():
         s.send(MESSAGE)
 
 
+#method for handling data reception
 def recieve():
     global readData,s
     while(True):
